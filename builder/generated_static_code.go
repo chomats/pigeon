@@ -55,6 +55,22 @@ func Entrypoint(ruleName string) Option {
 	}
 }
 
+func IsNil(object interface{}) bool {
+	if object == nil {
+		return true
+	}
+
+	objValue := reflect.ValueOf(object)
+
+	switch objValue.Kind() {
+	case reflect.Ptr:
+		if objValue.IsNil() {
+			return true
+		}
+	}
+	return false
+}
+
 // ==template== {{ if not .Optimize }}
 // Statistics adds a user provided Stats struct to the parser to allow
 // the user to process the results after the parsing has finished.
@@ -1303,7 +1319,9 @@ func (p *parser) parseOneOrMoreExpr(expr *oneOrMoreExpr) (interface{}, bool) {
 			}
 			return vals, true
 		}
-		vals = append(vals, val)
+		if !IsNil(val) {
+			vals = append(vals, val)
+		}
 	}
 }
 
@@ -1363,7 +1381,9 @@ func (p *parser) parseSeqExpr(seq *seqExpr) (interface{}, bool) {
 			p.restore(pt)
 			return nil, false
 		}
-		vals = append(vals, val)
+		if !IsNil(val) {
+			vals = append(vals, val)
+		}
 	}
 	return vals, true
 }
@@ -1421,7 +1441,9 @@ func (p *parser) parseZeroOrMoreExpr(expr *zeroOrMoreExpr) (interface{}, bool) {
 		if !ok {
 			return vals, true
 		}
-		vals = append(vals, val)
+		if !IsNil(val)  {
+			vals = append(vals, val)
+		}
 	}
 }
 

@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"math"
 	"os"
+	"reflect"
 	"sort"
 	"strings"
 	"unicode"
@@ -165,6 +166,22 @@ func Entrypoint(ruleName string) Option {
 		}
 		return Entrypoint(oldEntrypoint)
 	}
+}
+
+func IsNil(object interface{}) bool {
+	if object == nil {
+		return true
+	}
+
+	objValue := reflect.ValueOf(object)
+
+	switch objValue.Kind() {
+	case reflect.Ptr:
+		if objValue.IsNil() {
+			return true
+		}
+	}
+	return false
 }
 
 // AllowInvalidUTF8 creates an Option to allow invalid UTF-8 bytes.
@@ -1024,7 +1041,9 @@ func (p *parser) parseOneOrMoreExpr(expr *oneOrMoreExpr) (interface{}, bool) {
 			}
 			return vals, true
 		}
-		vals = append(vals, val)
+		if !IsNil(val) {
+			vals = append(vals, val)
+		}
 	}
 }
 
@@ -1060,7 +1079,9 @@ func (p *parser) parseSeqExpr(seq *seqExpr) (interface{}, bool) {
 			p.restore(pt)
 			return nil, false
 		}
-		vals = append(vals, val)
+		if !IsNil(val) {
+			vals = append(vals, val)
+		}
 	}
 	return vals, true
 }
@@ -1088,7 +1109,9 @@ func (p *parser) parseZeroOrMoreExpr(expr *zeroOrMoreExpr) (interface{}, bool) {
 		if !ok {
 			return vals, true
 		}
-		vals = append(vals, val)
+		if !IsNil(val) {
+			vals = append(vals, val)
+		}
 	}
 }
 

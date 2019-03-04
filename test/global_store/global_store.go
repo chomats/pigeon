@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"math"
 	"os"
+	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -231,6 +232,22 @@ func Entrypoint(ruleName string) Option {
 		}
 		return Entrypoint(oldEntrypoint)
 	}
+}
+
+func IsNil(object interface{}) bool {
+	if object == nil {
+		return true
+	}
+
+	objValue := reflect.ValueOf(object)
+
+	switch objValue.Kind() {
+	case reflect.Ptr:
+		if objValue.IsNil() {
+			return true
+		}
+	}
+	return false
 }
 
 // Statistics adds a user provided Stats struct to the parser to allow
@@ -1365,7 +1382,9 @@ func (p *parser) parseOneOrMoreExpr(expr *oneOrMoreExpr) (interface{}, bool) {
 			}
 			return vals, true
 		}
-		vals = append(vals, val)
+		if !IsNil(val) {
+			vals = append(vals, val)
+		}
 	}
 }
 
@@ -1414,7 +1433,9 @@ func (p *parser) parseSeqExpr(seq *seqExpr) (interface{}, bool) {
 			p.restore(pt)
 			return nil, false
 		}
-		vals = append(vals, val)
+		if !IsNil(val) {
+			vals = append(vals, val)
+		}
 	}
 	return vals, true
 }
@@ -1461,7 +1482,9 @@ func (p *parser) parseZeroOrMoreExpr(expr *zeroOrMoreExpr) (interface{}, bool) {
 		if !ok {
 			return vals, true
 		}
-		vals = append(vals, val)
+		if !IsNil(val) {
+			vals = append(vals, val)
+		}
 	}
 }
 
