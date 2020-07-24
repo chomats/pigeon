@@ -12,6 +12,7 @@ import (
 	"os"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -57,6 +58,7 @@ var g = &grammar{
 									pos:        position{line: 6, col: 13, offset: 52},
 									val:        ",",
 									ignoreCase: false,
+									want:       "\",\"",
 								},
 								&ruleRefExpr{
 									pos:  position{line: 6, col: 17, offset: 56},
@@ -78,6 +80,7 @@ var g = &grammar{
 						pos:        position{line: 7, col: 6, offset: 66},
 						val:        "X",
 						ignoreCase: false,
+						want:       "\"X\"",
 					},
 					&zeroOrOneExpr{
 						pos: position{line: 7, col: 10, offset: 70},
@@ -99,6 +102,7 @@ var g = &grammar{
 					pos:        position{line: 8, col: 6, offset: 78},
 					val:        "Y",
 					ignoreCase: false,
+					want:       "\"Y\"",
 				},
 			},
 		},
@@ -259,7 +263,7 @@ type position struct {
 }
 
 func (p position) String() string {
-	return fmt.Sprintf("%d:%d [%d]", p.line, p.col, p.offset)
+	return strconv.Itoa(p.line) + ":" + strconv.Itoa(p.col) + " [" + strconv.Itoa(p.offset) + "]"
 }
 
 // savepoint stores all state required to go back to this point in the
@@ -375,6 +379,7 @@ type litMatcher struct {
 	pos        position
 	val        string
 	ignoreCase bool
+	want       string
 }
 
 // nolint: structcheck
@@ -772,7 +777,7 @@ func listJoin(list []string, sep string, lastSep string) string {
 	case 1:
 		return list[0]
 	default:
-		return fmt.Sprintf("%s %s %s", strings.Join(list[:len(list)-1], sep), lastSep, list[len(list)-1])
+		return strings.Join(list[:len(list)-1], sep) + " " + lastSep + " " + list[len(list)-1]
 	}
 }
 
@@ -984,11 +989,6 @@ func (p *parser) parseLabeledExpr(lab *labeledExpr) (interface{}, bool) {
 }
 
 func (p *parser) parseLitMatcher(lit *litMatcher) (interface{}, bool) {
-	ignoreCase := ""
-	if lit.ignoreCase {
-		ignoreCase = "i"
-	}
-	val := fmt.Sprintf("%q%s", lit.val, ignoreCase)
 	start := p.pt
 	for _, want := range lit.val {
 		cur := p.pt.rn
@@ -996,13 +996,13 @@ func (p *parser) parseLitMatcher(lit *litMatcher) (interface{}, bool) {
 			cur = unicode.ToLower(cur)
 		}
 		if cur != want {
-			p.failAt(false, start.position, val)
+			p.failAt(false, start.position, lit.want)
 			p.restore(start)
 			return nil, false
 		}
 		p.read()
 	}
-	p.failAt(true, start.position, val)
+	p.failAt(true, start.position, lit.want)
 	return p.sliceFrom(start), true
 }
 

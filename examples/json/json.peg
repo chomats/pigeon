@@ -14,16 +14,8 @@ func toIfaceSlice(v interface{}) []interface{} {
 }
 }
 
-JSON ← _ vals:Value+ EOF {
-    valsSl := toIfaceSlice(vals)
-    switch len(valsSl) {
-    case 0:
-        return nil, nil
-    case 1:
-        return valsSl[0], nil
-    default:
-        return valsSl, nil
-    }
+JSON ← _ val:Value EOF {
+    return val, nil
 }
 
 Value ← val:( Object / Array / Number / String / Bool / Null ) _ {
@@ -70,8 +62,7 @@ Integer ← '0' / NonZeroDecimalDigit DecimalDigit*
 Exponent ← 'e'i [+-]? DecimalDigit+
 
 String ← '"' ( !EscapedChar . / '\\' EscapeSequence )* '"' {
-    // TODO : the forward slash (solidus) is not a valid escape in Go, it will
-    // fail if there's one in the string
+    c.text = bytes.Replace(c.text, []byte(`\/`), []byte(`/`), -1)
     return strconv.Unquote(string(c.text))
 }
 

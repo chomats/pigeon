@@ -1,5 +1,8 @@
 SHELL = /bin/bash
 
+# force the use of go modules
+export GO111MODULE = on
+
 # directories and source code lists
 ROOT = .
 ROOT_SRC = $(ROOT)/*.go
@@ -154,6 +157,21 @@ $(TEST_DIR)/issue_65/optimized/issue_65.go: $(TEST_DIR)/issue_65/issue_65.peg $(
 $(TEST_DIR)/issue_65/optimized-grammar/issue_65.go: $(TEST_DIR)/issue_65/issue_65.peg $(BINDIR)/pigeon
 	$(BINDIR)/pigeon -nolint -optimize-grammar $< > $@
 
+$(TEST_DIR)/issue_70/issue_70.go: $(TEST_DIR)/issue_70/issue_70.peg $(TEST_DIR)/issue_70/optimized/issue_70.go $(TEST_DIR)/issue_70/optimized-grammar/issue_70.go $(BINDIR)/pigeon
+	$(BINDIR)/pigeon -nolint $< > $@
+
+$(TEST_DIR)/issue_70/optimized/issue_70.go: $(TEST_DIR)/issue_70/issue_70.peg $(BINDIR)/pigeon
+	$(BINDIR)/pigeon -nolint -optimize-parser -optimize-basic-latin $< > $@
+
+$(TEST_DIR)/issue_70/optimized-grammar/issue_70.go: $(TEST_DIR)/issue_70/issue_70.peg $(BINDIR)/pigeon
+	$(BINDIR)/pigeon -nolint -optimize-grammar $< > $@
+
+$(TEST_DIR)/issue_70b/issue_70b.go: $(TEST_DIR)/issue_70b/issue_70b.peg $(BINDIR)/pigeon
+	$(BINDIR)/pigeon -nolint --optimize-grammar $< > $@
+
+$(TEST_DIR)/issue_80/issue_80.go: $(TEST_DIR)/issue_80/issue_80.peg $(BINDIR)/pigeon
+	$(BINDIR)/pigeon -nolint $< > $@
+
 lint:
 	golint ./...
 	go vet ./...
@@ -168,10 +186,13 @@ cmp:
 	unlink $$boot && \
 	unlink $$official
 
+test:
+	go test -v ./...
+
 clean:
 	rm -f $(BUILDER_DIR)/generated_static_code.go $(BUILDER_DIR)/generated_static_code_range_table.go
 	rm -f $(BOOTSTRAPPIGEON_DIR)/bootstrap_pigeon.go $(ROOT)/pigeon.go $(TEST_GENERATED_SRC) $(EXAMPLES_DIR)/json/optimized/json.go $(EXAMPLES_DIR)/json/optimized-grammar/json.go $(TEST_DIR)/staterestore/optimized/staterestore.go $(TEST_DIR)/staterestore/standard/staterestore.go $(TEST_DIR)/issue_65/optimized/issue_65.go $(TEST_DIR)/issue_65/optimized-grammar/issue_65.go
 	rm -rf $(BINDIR)
 
-.PHONY: all clean lint gometalinter cmp
+.PHONY: all clean lint gometalinter cmp test
 

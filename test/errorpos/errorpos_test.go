@@ -48,7 +48,7 @@ func TestErrorPos(t *testing.T) {
 		}
 		if got != exp {
 			_, _ = Parse("", []byte(tc), Debug(true))
-			t.Errorf("%q: want %v, got %v", tc, exp, got)
+			t.Errorf("%q: want '%v', got '%v'", tc, exp, got)
 		}
 	}
 }
